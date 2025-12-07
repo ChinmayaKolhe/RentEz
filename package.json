@@ -1,0 +1,23 @@
+{
+    "name": "rentez",
+    "version": "1.0.0",
+    "description": "RentEz - Property Rental & Management Platform",
+    "scripts": {
+        "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+        "dev": "concurrently \"npm run server\" \"npm run client\"",
+        "server": "cd server && npm run dev",
+        "client": "cd client && npm run dev",
+        "build": "cd client && npm run build"
+    },
+    "keywords": [
+        "rental",
+        "property",
+        "real-estate",
+        "mern"
+    ],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
