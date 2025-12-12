@@ -80,11 +80,39 @@ const propertySchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Pre-save middleware to ensure proper GeoJSON format
+propertySchema.pre('save', function(next) {
+  if (this.location && this.location.coordinates && !this.location.type) {
+    this.location.type = 'Point';
+  }
+  next();
+});
+
+// Pre-update middleware to ensure proper GeoJSON format
+propertySchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate();
+  if (update.location && update.location.coordinates && !update.location.type) {
+    update.location.type = 'Point';
+  }
+  next();
+});
 
 // Create geospatial index for location-based queries
 propertySchema.index({ location: '2dsphere' });

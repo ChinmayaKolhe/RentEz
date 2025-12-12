@@ -111,7 +111,7 @@ const Home = () => {
             <Building2 className="h-6 w-6" />
             <span className="text-xl font-bold">RentEz</span>
           </div>
-          <p className="text-gray-400">© 2024 RentEz. All rights reserved.</p>
+          <p className="text-gray-400">© 2025 RentEz. All rights reserved.</p>
         </div>
       </footer>
     </div>

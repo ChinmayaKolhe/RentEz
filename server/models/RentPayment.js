@@ -48,6 +48,32 @@ const rentPaymentSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    paymentProof: {
+      type: String,
+      default: '',
+    },
+    receiptUrl: {
+      type: String,
+      default: '',
+    },
+    verificationStatus: {
+      type: String,
+      enum: ['not_submitted', 'pending_verification', 'verified', 'rejected'],
+      default: 'not_submitted',
+    },
+    verificationNotes: {
+      type: String,
+      default: '',
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

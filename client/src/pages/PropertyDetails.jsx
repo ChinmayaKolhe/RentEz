@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProperty } from '../services/api';
+import { getProperty, getPropertyReviews, createReview, markReviewHelpful, addOwnerResponse } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import MapView from '../components/MapView';
 import ApplyPropertyModal from '../components/ApplyPropertyModal';
-import { Bed, Bath, MapPin, IndianRupee, Home, MessageSquare, ArrowLeft, Calendar, FileText } from 'lucide-react';
+import ReviewStats from '../components/ReviewStats';
+import ReviewList from '../components/ReviewList';
+import ReviewForm from '../components/ReviewForm';
+import StarRating from '../components/StarRating';
+import { Bed, Bath, MapPin, IndianRupee, Home, MessageSquare, ArrowLeft, Calendar, FileText, Star, X } from 'lucide-react';
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -14,10 +18,18 @@ const PropertyDetails = () => {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [selectedReviewId, setSelectedReviewId] = useState(null);
+  const [responseText, setResponseText] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
   const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
   useEffect(() => {
     fetchProperty();
+    fetchReviews();
   }, [id]);
 
   const fetchProperty = async () => {
@@ -29,6 +41,58 @@ const PropertyDetails = () => {
       console.error('Error fetching property:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const response = await getPropertyReviews(id);
+      setReviews(response.data.reviews);
+      setReviewStats(response.data.stats);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const handleSubmitReview = async (formData) => {
+    try {
+      setReviewLoading(true);
+      formData.append('property', id);
+      await createReview(formData);
+      alert('Review submitted successfully!');
+      setShowReviewModal(false);
+      fetchReviews();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleHelpful = async (reviewId) => {
+    try {
+      await markReviewHelpful(reviewId);
+      fetchReviews();
+    } catch (error) {
+      console.error('Error marking helpful:', error);
+    }
+  };
+
+  const handleResponse = (reviewId) => {
+    setSelectedReviewId(reviewId);
+    setShowResponseModal(true);
+  };
+
+  const handleSubmitResponse = async () => {
+    try {
+      await addOwnerResponse(selectedReviewId, { text: responseText });
+      alert('Response added successfully!');
+      setShowResponseModal(false);
+      setResponseText('');
+      setSelectedReviewId(null);
+      fetchReviews();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to add response');
     }
   };
 
@@ -247,6 +311,114 @@ const PropertyDetails = () => {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold text-gray-900">Reviews & Ratings</h2>
+            {user?.role === 'tenant' && (
+              <button
+                onClick={() => setShowReviewModal(true)}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Star className="h-5 w-5" />
+                Write a Review
+              </button>
+            )}
+          </div>
+
+          {/* Review Stats */}
+          <div className="mb-8">
+            <ReviewStats stats={reviewStats} />
+          </div>
+
+          {/* Review List */}
+          <ReviewList
+            reviews={reviews}
+            stats={reviewStats}
+            onHelpful={handleHelpful}
+            onResponse={handleResponse}
+            isOwner={property?.owner?._id === user?._id}
+            currentUserId={user?._id}
+          />
+        </div>
+
+        {/* Review Modal */}
+        {showReviewModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+                <h2 className="text-2xl font-bold text-gray-900">Write a Review</h2>
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <div className="p-6">
+                <ReviewForm
+                  onSubmit={handleSubmitReview}
+                  onCancel={() => setShowReviewModal(false)}
+                  loading={reviewLoading}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Owner Response Modal */}
+        {showResponseModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-lg w-full">
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Respond to Review</h2>
+                <button
+                  onClick={() => {
+                    setShowResponseModal(false);
+                    setResponseText('');
+                    setSelectedReviewId(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <div className="p-6">
+                <textarea
+                  value={responseText}
+                  onChange={(e) => setResponseText(e.target.value)}
+                  rows={4}
+                  maxLength={500}
+                  className="input-field mb-4"
+                  placeholder="Write your response..."
+                />
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-gray-500">{responseText.length}/500</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowResponseModal(false);
+                        setResponseText('');
+                        setSelectedReviewId(null);
+                      }}
+                      className="btn-outline"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSubmitResponse}
+                      className="btn-primary"
+                      disabled={!responseText.trim()}
+                    >
+                      Submit Response
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Apply Modal */}
         {showApplyModal && (

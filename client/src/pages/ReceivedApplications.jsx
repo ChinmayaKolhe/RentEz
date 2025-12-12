@@ -9,6 +9,8 @@ const ReceivedApplications = () => {
   const [filter, setFilter] = useState('all');
   const [processingId, setProcessingId] = useState(null);
 
+  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
   useEffect(() => {
     fetchApplications();
   }, [filter]);
@@ -123,7 +125,13 @@ const ReceivedApplications = () => {
                   {/* Property Info */}
                   <div className="md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
                     <img
-                      src={application.property?.images?.[0] || 'https://via.placeholder.com/300x200'}
+                      src={
+                        application.property?.images?.[0]
+                          ? (application.property.images[0].startsWith('http')
+                              ? application.property.images[0]
+                              : `${API_BASE}${application.property.images[0]}`)
+                          : 'https://via.placeholder.com/300x200?text=No+Image'
+                      }
                       alt={application.property?.title}
                       className="w-full h-full object-cover"
                     />

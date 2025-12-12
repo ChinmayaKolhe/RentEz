@@ -44,6 +44,9 @@ const Navbar = () => {
                     <Link to="/owner/add-property" className="text-gray-700 hover:text-primary-600 transition-colors">
                       Add Property
                     </Link>
+                    <Link to="/owner/analytics" className="text-gray-700 hover:text-primary-600 transition-colors">
+                      Analytics
+                    </Link>
                     <Link to="/owner/applications" className="text-gray-700 hover:text-primary-600 transition-colors">
                       Applications
                     </Link>

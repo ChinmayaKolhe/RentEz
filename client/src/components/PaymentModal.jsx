@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { updateRentPayment } from '../services/api';
-import { X, CreditCard, Banknote, Smartphone, FileText, Calendar } from 'lucide-react';
+import { updateRentPayment, uploadPaymentProof } from '../services/api';
+import { X, CreditCard, Banknote, Smartphone, FileText, Calendar, Upload, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 const PaymentModal = ({ payment, onClose, onSuccess }) => {
@@ -9,6 +9,8 @@ const PaymentModal = ({ payment, onClose, onSuccess }) => {
     transactionId: '',
     notes: '',
   });
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [receiptPreview, setReceiptPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,17 +27,58 @@ const PaymentModal = ({ payment, onClose, onSuccess }) => {
     setError('');
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please upload an image (JPEG, PNG, WEBP) or PDF file');
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    setReceiptFile(file);
+    setError('');
+
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setReceiptPreview(null);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
+      // First, upload the receipt if provided
+      if (receiptFile) {
+        const receiptFormData = new FormData();
+        receiptFormData.append('paymentProof', receiptFile);
+        await uploadPaymentProof(payment._id, receiptFormData);
+      }
+
+      // Then update payment details
       await updateRentPayment(payment._id, {
-        status: 'paid',
+        status: receiptFile ? 'pending' : 'paid', // If receipt uploaded, wait for verification
         paymentDate: new Date().toISOString(),
         ...formData,
       });
+      
       onSuccess();
       onClose();
     } catch (error) {
@@ -47,7 +90,7 @@ const PaymentModal = ({ payment, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[85vh] flex flex-col relative animate-slide-up shadow-2xl">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col relative animate-slide-up shadow-2xl">
         {/* Fixed Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Make Payment</h2>
@@ -130,6 +173,67 @@ const PaymentModal = ({ payment, onClose, onSuccess }) => {
                 placeholder="Enter transaction ID"
                 className="input-field text-sm"
               />
+            </div>
+
+            {/* Receipt Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Payment Receipt (Optional)
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary-400 transition-colors">
+                <input
+                  type="file"
+                  id="receipt-upload"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label htmlFor="receipt-upload" className="cursor-pointer">
+                  {receiptPreview ? (
+                    <div className="space-y-2">
+                      <img src={receiptPreview} alt="Receipt preview" className="max-h-32 mx-auto rounded" />
+                      <p className="text-xs text-gray-600">{receiptFile?.name}</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setReceiptFile(null);
+                          setReceiptPreview(null);
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : receiptFile ? (
+                    <div className="space-y-2">
+                      <FileText className="h-12 w-12 mx-auto text-gray-400" />
+                      <p className="text-xs text-gray-600">{receiptFile.name}</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setReceiptFile(null);
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Upload className="h-8 w-8 mx-auto text-gray-400" />
+                      <p className="text-sm text-gray-600">Click to upload receipt</p>
+                      <p className="text-xs text-gray-500">Image or PDF (Max 10MB)</p>
+                    </div>
+                  )}
+                </label>
+              </div>
+              {receiptFile && (
+                <p className="text-xs text-blue-600 mt-2">
+                  ℹ️ Receipt will be sent to owner for verification
+                </p>
+              )}
             </div>
 
             <div>

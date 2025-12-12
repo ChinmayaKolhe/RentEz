@@ -61,6 +61,10 @@ export const getTenantPayments = () => api.get('/rent/tenant');
 export const getOwnerPayments = () => api.get('/rent/owner');
 export const createRentPayment = (data) => api.post('/rent', data);
 export const updateRentPayment = (id, data) => api.put(`/rent/${id}`, data);
+export const uploadPaymentProof = (id, formData) => api.post(`/rent/${id}/upload-proof`, formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+});
+export const verifyPaymentReceipt = (id, data) => api.put(`/rent/${id}/verify-receipt`, data);
 export const getPaymentStats = () => api.get('/rent/stats');
 
 // Chat API
@@ -81,5 +85,19 @@ export const createLease = (data) => api.post('/leases', data);
 export const getActiveLeases = () => api.get('/leases/active');
 export const getLeaseDetails = (id) => api.get(`/leases/${id}`);
 export const terminateLease = (id) => api.put(`/leases/${id}/terminate`);
+
+// Analytics API
+export const getOwnerOverview = () => api.get('/analytics/owner/overview');
+export const getRevenueBreakdown = (months = 6) => api.get('/analytics/owner/revenue', { params: { months } });
+export const getPropertyPerformance = () => api.get('/analytics/owner/properties');
+
+// Reviews API
+export const createReview = (data) => api.post('/reviews', data);
+export const getPropertyReviews = (propertyId, params) => api.get(`/reviews/property/${propertyId}`, { params });
+export const updateReview = (id, data) => api.put(`/reviews/${id}`, data);
+export const deleteReview = (id) => api.delete(`/reviews/${id}`);
+export const markReviewHelpful = (id) => api.post(`/reviews/${id}/helpful`);
+export const addOwnerResponse = (id, data) => api.post(`/reviews/${id}/response`, data);
+export const getMyReviews = () => api.get('/reviews/my-reviews');
 
 export default api;

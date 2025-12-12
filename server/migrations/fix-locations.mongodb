@@ -1,0 +1,22 @@
+// MongoDB Shell Script to Fix Property Locations
+// Run this in MongoDB Compass or mongosh
+
+// Connect to your database first, then run:
+
+db.properties.updateMany(
+  {
+    "location.coordinates": { $exists: true },
+    "location.type": { $exists: false }
+  },
+  {
+    $set: { "location.type": "Point" }
+  }
+);
+
+// This will add the missing "type: Point" field to all properties
+// that have coordinates but are missing the type field
+
+// To verify the fix, run:
+db.properties.find({ "location.coordinates": { $exists: true } }).forEach(function(doc) {
+  print("Property:", doc.title, "- Location type:", doc.location.type);
+});

@@ -2,7 +2,7 @@
 
 <div align="center">
   <h3>🏠 Connecting Property Owners and Tenants Seamlessly</h3>
-  <p>A full-stack MERN application for property rental and management</p>
+  <p>A full-stack MERN application for property rental and management with advanced features</p>
 </div>
 
 ---
@@ -13,36 +13,56 @@
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
 - [Installation](#-installation)
-- [Configuration](#-configuration)
 - [Running the Application](#-running-the-application)
 - [API Documentation](#-api-documentation)
-- [Screenshots](#-screenshots)
 
 ---
 
 ## ✨ Features
 
 ### For Property Owners
-- ✅ Add, edit, and delete property listings
-- ✅ Upload multiple property images (Cloudinary integration)
-- ✅ Dashboard to view all listed properties
-- ✅ Manage rent payment history for tenants
-- ✅ Real-time chat with potential tenants
+- ✅ **Property Management**: Add, edit, and delete property listings with multiple images
+- ✅ **Owner Dashboard**: View all properties with profile section and quick stats
+- ✅ **Application Management**: Review and approve/reject tenant applications
+- ✅ **Lease Management**: Create and manage rental agreements
+- ✅ **Payment Tracking**: Monitor rent payments with receipt verification
+- ✅ **Analytics Dashboard**: Revenue trends, occupancy rates, property performance metrics with interactive charts
+- ✅ **Review Responses**: Respond to tenant reviews and build credibility
+- ✅ **Real-time Chat**: Communicate with potential and current tenants
 
 ### For Tenants
-- ✅ Browse and filter properties by location, price, bedrooms, etc.
-- ✅ View property details with interactive maps (Mapbox)
-- ✅ Real-time chat with property owners
-- ✅ Track rent payment status
-- ✅ Receive automated monthly rent reminders via email
+- ✅ **Property Search**: Browse and filter properties by location, price, bedrooms, etc.
+- ✅ **Interactive Maps**: View property locations with Mapbox integration
+- ✅ **Application System**: Apply for properties with document uploads
+- ✅ **Tenant Dashboard**: View active leases and payment history with profile section
+- ✅ **Payment Management**: Upload payment receipts and track payment status
+- ✅ **Reviews & Ratings**: Write detailed reviews with photos, pros/cons, and star ratings
+- ✅ **Real-time Chat**: Message property owners directly
+- ✅ **Automated Reminders**: Receive monthly rent reminders via email
 
-### General Features
-- ✅ JWT-based authentication
-- ✅ Role-based access control (Owner/Tenant)
-- ✅ Real-time messaging with Socket.io
-- ✅ Automated email reminders with Nodemailer
-- ✅ Responsive design with Tailwind CSS
-- ✅ Interactive property location maps
+### Advanced Features
+- ⭐ **Reviews & Ratings System**
+  - Verified tenant reviews only
+  - 5-star rating system
+  - Photo uploads (up to 5 per review)
+  - Pros and cons lists
+  - Owner responses
+  - Helpful votes
+  - Rating statistics and distribution
+
+- 📊 **Analytics Dashboard**
+  - Revenue trends with interactive charts (Recharts)
+  - Occupancy rate tracking
+  - Payment distribution visualization
+  - Property performance metrics
+  - Collection rate analysis
+  - Time range filtering (3/6/12 months)
+
+- 🔐 **Security & Authentication**
+  - JWT-based authentication
+  - Role-based access control (Owner/Tenant)
+  - Protected routes and API endpoints
+  - Secure file uploads
 
 ---
 
@@ -51,13 +71,10 @@
 ### Backend
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
-- **MongoDB** - Database
-- **Mongoose** - ODM
+- **MongoDB** - Database with Mongoose ODM
 - **JWT** - Authentication
 - **Socket.io** - Real-time communication
-- **Cloudinary** - Image storage
-- **Nodemailer** - Email service
-- **node-cron** - Scheduled tasks
+- **Multer** - File upload handling
 
 ### Frontend
 - **React** - UI library
@@ -67,7 +84,9 @@
 - **Axios** - HTTP client
 - **Socket.io Client** - Real-time messaging
 - **Mapbox GL** - Interactive maps
+- **Recharts** - Data visualization
 - **Lucide React** - Icons
+- **date-fns** - Date formatting
 
 ---
 
@@ -78,7 +97,21 @@ RentEz/
 ├── client/                 # Frontend React application
 │   ├── src/
 │   │   ├── components/     # Reusable components
+│   │   │   ├── StarRating.jsx
+│   │   │   ├── ReviewCard.jsx
+│   │   │   ├── ReviewForm.jsx
+│   │   │   ├── ReviewStats.jsx
+│   │   │   ├── ReviewList.jsx
+│   │   │   ├── AnalyticsCard.jsx
+│   │   │   ├── RevenueChart.jsx
+│   │   │   ├── PaymentStatusChart.jsx
+│   │   │   └── ...
 │   │   ├── pages/          # Page components
+│   │   │   ├── PropertyDetails.jsx
+│   │   │   ├── Analytics.jsx
+│   │   │   ├── OwnerDashboard.jsx
+│   │   │   ├── TenantDashboard.jsx
+│   │   │   └── ...
 │   │   ├── context/        # Context providers
 │   │   ├── hooks/          # Custom hooks
 │   │   ├── services/       # API services
@@ -90,11 +123,28 @@ RentEz/
 │
 ├── server/                 # Backend Express application
 │   ├── config/             # Configuration files
+│   │   ├── db.js
+│   │   └── socket.js
 │   ├── controllers/        # Route controllers
+│   │   ├── reviewController.js
+│   │   ├── analyticsController.js
+│   │   ├── rentController.js
+│   │   └── ...
 │   ├── models/             # Mongoose models
+│   │   ├── Review.js
+│   │   ├── Property.js
+│   │   ├── RentPayment.js
+│   │   ├── Lease.js
+│   │   └── ...
 │   ├── middleware/         # Custom middleware
+│   │   ├── auth.js
+│   │   └── upload.js
 │   ├── routes/             # API routes
-│   ├── utils/              # Utility functions
+│   │   ├── reviews.js
+│   │   ├── analytics.js
+│   │   ├── properties.js
+│   │   └── ...
+│   ├── uploads/            # Uploaded files
 │   ├── server.js           # Entry point
 │   └── package.json
 │
@@ -108,17 +158,19 @@ RentEz/
 ## 🚀 Installation
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js (v14 or higher)
 - MongoDB (local or Atlas)
 - npm or yarn
 
-### Step 1: Clone the repository
+### Setup Steps
+
+1. **Clone the repository**
 ```bash
 git clone <repository-url>
 cd RentEz
 ```
 
-### Step 2: Install dependencies
+2. **Install dependencies**
 ```bash
 # Install root dependencies
 npm install
@@ -132,78 +184,38 @@ cd ../client
 npm install
 ```
 
----
+3. **Configure environment variables**
 
-## ⚙️ Configuration
-
-### Backend Configuration
-
-1. Create a `.env` file in the `server` directory:
-```bash
-cd server
-cp .env.example .env
-```
-
-2. Update the `.env` file with your credentials:
-
+Create `.env` file in the `server` directory:
 ```env
-# Server Configuration
+# Server
 PORT=5000
 NODE_ENV=development
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/rentez
-# Or use MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/rentez
+MONGO_URI=your_mongodb_connection_string
 
-# JWT Secret
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
+# JWT
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRE=30d
 
-# Cloudinary Configuration
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-# Email Configuration (Nodemailer)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_specific_password
-EMAIL_FROM=RentEz <noreply@rentez.com>
-
-# Frontend URL
+# Client URL
 CLIENT_URL=http://localhost:5173
+
+# Email (for rent reminders)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+
+# Mapbox (optional)
+MAPBOX_TOKEN=your_mapbox_token
 ```
 
-### Frontend Configuration
-
-1. Create a `.env` file in the `client` directory:
-```bash
-cd client
-cp .env.example .env
-```
-
-2. Update the `.env` file:
-
+Create `.env` file in the `client` directory:
 ```env
 VITE_API_URL=http://localhost:5000/api
-VITE_MAPBOX_TOKEN=your_mapbox_access_token_here
 VITE_SOCKET_URL=http://localhost:5000
+VITE_MAPBOX_TOKEN=your_mapbox_token
 ```
-
-### Getting API Keys
-
-#### Cloudinary
-1. Sign up at [cloudinary.com](https://cloudinary.com)
-2. Get your Cloud Name, API Key, and API Secret from the dashboard
-
-#### Mapbox
-1. Sign up at [mapbox.com](https://mapbox.com)
-2. Create an access token from your account dashboard
-
-#### Gmail (for Nodemailer)
-1. Enable 2-factor authentication on your Google account
-2. Generate an App Password from [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 
 ---
 
@@ -221,7 +233,7 @@ npm run dev
 ```bash
 # Terminal 1 - Start backend server
 cd server
-npm run dev
+npm start
 
 # Terminal 2 - Start frontend client
 cd client
@@ -269,6 +281,24 @@ npm start
 | DELETE | `/api/properties/:id` | Delete property | Yes (Owner) |
 | GET | `/api/properties/owner/my-properties` | Get owner's properties | Yes (Owner) |
 
+### Application Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/applications` | Submit property application | Yes (Tenant) |
+| GET | `/api/applications/my-applications` | Get tenant's applications | Yes (Tenant) |
+| GET | `/api/applications/received` | Get received applications | Yes (Owner) |
+| PUT | `/api/applications/:id/status` | Update application status | Yes (Owner) |
+
+### Lease Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/leases` | Create new lease | Yes (Owner) |
+| GET | `/api/leases/active` | Get active leases | Yes |
+| GET | `/api/leases/:id` | Get lease details | Yes |
+| PUT | `/api/leases/:id/terminate` | Terminate lease | Yes (Owner) |
+
 ### Rent Payment Endpoints
 
 | Method | Endpoint | Description | Auth Required |
@@ -277,7 +307,28 @@ npm start
 | GET | `/api/rent/owner` | Get owner's payments | Yes (Owner) |
 | POST | `/api/rent` | Create rent payment | Yes (Owner) |
 | PUT | `/api/rent/:id` | Update payment status | Yes |
-| GET | `/api/rent/stats` | Get payment statistics | Yes |
+| POST | `/api/rent/:id/upload-proof` | Upload payment receipt | Yes (Tenant) |
+| PUT | `/api/rent/:id/verify-receipt` | Verify payment receipt | Yes (Owner) |
+
+### Analytics Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/analytics/owner/overview` | Get owner analytics overview | Yes (Owner) |
+| GET | `/api/analytics/owner/revenue` | Get revenue breakdown | Yes (Owner) |
+| GET | `/api/analytics/owner/properties` | Get property performance | Yes (Owner) |
+
+### Review Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/reviews` | Create review | Yes (Tenant) |
+| GET | `/api/reviews/property/:propertyId` | Get property reviews | No |
+| PUT | `/api/reviews/:id` | Update review | Yes (Author) |
+| DELETE | `/api/reviews/:id` | Delete review | Yes (Author) |
+| POST | `/api/reviews/:id/helpful` | Mark review helpful | Yes |
+| POST | `/api/reviews/:id/response` | Add owner response | Yes (Owner) |
+| GET | `/api/reviews/my-reviews` | Get my reviews | Yes (Tenant) |
 
 ### Chat Endpoints
 
@@ -289,41 +340,41 @@ npm start
 
 ---
 
-## 🎨 Screenshots
+## 🎯 Key Highlights
 
-> Add screenshots of your application here
+### Reviews & Ratings
+- Only verified tenants (with active/completed leases) can review
+- 5-star rating system with detailed feedback
+- Upload up to 5 photos per review
+- Add pros and cons lists
+- Owner response capability
+- Helpful vote system
+- Automatic rating calculations
 
----
+### Analytics Dashboard
+- Real-time revenue tracking
+- Interactive charts (line/bar toggle)
+- Occupancy rate monitoring
+- Payment distribution visualization
+- Property performance comparison
+- Time range filtering (3/6/12 months)
 
-## 🔧 Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Error**
-   - Ensure MongoDB is running locally or check your Atlas connection string
-   - Verify network access in MongoDB Atlas
-
-2. **Cloudinary Upload Fails**
-   - Verify your Cloudinary credentials in `.env`
-   - Check file size limits (default: 5MB)
-
-3. **Email Not Sending**
-   - Verify Gmail App Password is correct
-   - Check if 2FA is enabled on your Google account
-
-4. **Map Not Displaying**
-   - Verify Mapbox token in client `.env`
-   - Check browser console for errors
+### Payment Management
+- Receipt upload (images/PDFs up to 10MB)
+- Owner verification workflow
+- Approval/rejection with notes
+- Complete payment history
+- Status tracking (pending, paid, overdue)
 
 ---
 
 ## 📝 License
 
-This project is licensed under the ISC License.
+This project is open source and available under the MIT License.
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Developer
 
 Built with ❤️ using the MERN stack
 
@@ -335,6 +386,4 @@ Contributions, issues, and feature requests are welcome!
 
 ---
 
-## ⭐ Show your support
-
-Give a ⭐️ if you like this project!
+**Happy Renting! 🏠**

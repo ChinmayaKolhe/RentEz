@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getTenantPayments, getOwnerPayments } from '../services/api';
-import { IndianRupee, TrendingUp, Clock, CheckCircle, Receipt, CreditCard } from 'lucide-react';
+import { IndianRupee, TrendingUp, Clock, CheckCircle, Receipt, CreditCard, Eye, CheckSquare } from 'lucide-react';
 import PaymentModal from '../components/PaymentModal';
 import PaymentReceiptModal from '../components/PaymentReceiptModal';
+import ReceiptViewModal from '../components/ReceiptViewModal';
 
 const RentStatus = () => {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ const RentStatus = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [showReceiptViewModal, setShowReceiptViewModal] = useState(false);
 
   useEffect(() => {
     fetchPayments();
@@ -49,8 +51,34 @@ const RentStatus = () => {
     setShowReceiptModal(true);
   };
 
+  const handleViewReceiptImage = (payment) => {
+    setSelectedPayment(payment);
+    setShowReceiptViewModal(true);
+  };
+
   const handlePaymentSuccess = () => {
     fetchPayments();
+  };
+
+  const getVerificationBadge = (payment) => {
+    if (!payment.verificationStatus || payment.verificationStatus === 'not_submitted') {
+      return null;
+    }
+
+    const badges = {
+      pending_verification: { color: 'bg-yellow-100 text-yellow-800', text: 'Pending Verification' },
+      verified: { color: 'bg-green-100 text-green-800', text: 'Verified' },
+      rejected: { color: 'bg-red-100 text-red-800', text: 'Rejected' },
+    };
+
+    const badge = badges[payment.verificationStatus];
+    if (!badge) return null;
+
+    return (
+      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${badge.color}`}>
+        {badge.text}
+      </span>
+    );
   };
 
   return (
@@ -115,6 +143,9 @@ const RentStatus = () => {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Verification
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -122,13 +153,13 @@ const RentStatus = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
+                    <td colSpan="7" className="px-6 py-12 text-center">
                       <div className="spinner mx-auto"></div>
                     </td>
                   </tr>
                 ) : payments.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                       No payment records found
                     </td>
                   </tr>
@@ -167,7 +198,10 @@ const RentStatus = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        {getVerificationBadge(payment)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2 flex-wrap">
                           {user.role === 'tenant' && payment.status !== 'paid' && payment.status !== 'cancelled' && (
                             <button
                               onClick={() => handlePayNow(payment)}
@@ -184,6 +218,24 @@ const RentStatus = () => {
                             >
                               <Receipt className="h-3 w-3 mr-1" />
                               Receipt
+                            </button>
+                          )}
+                          {payment.receiptUrl && (
+                            <button
+                              onClick={() => handleViewReceiptImage(payment)}
+                              className="btn-outline text-xs py-1 px-3 flex items-center"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              View
+                            </button>
+                          )}
+                          {user.role === 'owner' && payment.verificationStatus === 'pending_verification' && (
+                            <button
+                              onClick={() => handleViewReceiptImage(payment)}
+                              className="bg-blue-600 text-white hover:bg-blue-700 text-xs py-1 px-3 rounded flex items-center"
+                            >
+                              <CheckSquare className="h-3 w-3 mr-1" />
+                              Verify
                             </button>
                           )}
                         </div>
@@ -216,6 +268,19 @@ const RentStatus = () => {
               setShowReceiptModal(false);
               setSelectedPayment(null);
             }}
+          />
+        )}
+
+        {/* Receipt View Modal */}
+        {showReceiptViewModal && selectedPayment && (
+          <ReceiptViewModal
+            payment={selectedPayment}
+            isOwner={user.role === 'owner'}
+            onClose={() => {
+              setShowReceiptViewModal(false);
+              setSelectedPayment(null);
+            }}
+            onSuccess={handlePaymentSuccess}
           />
         )}
       </div>

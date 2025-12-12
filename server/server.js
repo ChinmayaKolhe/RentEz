@@ -17,6 +17,8 @@ import rentRoutes from './routes/rent.js';
 import chatRoutes from './routes/chat.js';
 import applicationRoutes from './routes/applications.js';
 import leaseRoutes from './routes/leases.js';
+import analyticsRoutes from './routes/analytics.js';
+import reviewRoutes from './routes/reviews.js';
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +61,8 @@ app.use('/api/rent', rentRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/leases', leaseRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

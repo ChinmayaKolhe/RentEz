@@ -113,6 +113,14 @@ export const createProperty = async (req, res) => {
       owner: req.user._id,
     };
 
+    // Ensure proper GeoJSON format for location
+    if (propertyData.location && propertyData.location.coordinates) {
+      propertyData.location = {
+        type: 'Point',
+        coordinates: propertyData.location.coordinates
+      };
+    }
+
     // Handle multiple image uploads - save local file paths
     if (req.files && req.files.length > 0) {
       const imageUrls = req.files.map(file => `/uploads/${file.filename}`);
@@ -154,6 +162,14 @@ export const updateProperty = async (req, res) => {
         success: false,
         message: 'Not authorized to update this property',
       });
+    }
+
+    // Ensure proper GeoJSON format for location if being updated
+    if (req.body.location && req.body.location.coordinates) {
+      req.body.location = {
+        type: 'Point',
+        coordinates: req.body.location.coordinates
+      };
     }
 
     // Handle new image uploads - save local file paths

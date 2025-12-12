@@ -140,6 +140,112 @@ export const updateRentPayment = async (req, res) => {
   }
 };
 
+// @desc    Upload payment proof
+// @route   POST /api/rent/:id/upload-proof
+// @access  Private (Tenant only)
+export const uploadPaymentProof = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload a file',
+      });
+    }
+
+    const payment = await RentPayment.findById(req.params.id);
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment not found',
+      });
+    }
+
+    // Check authorization (tenant only)
+    if (payment.tenant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to upload proof for this payment',
+      });
+    }
+
+    payment.paymentProof = `/uploads/${req.file.filename}`;
+    payment.receiptUrl = `/uploads/${req.file.filename}`;
+    payment.verificationStatus = 'pending_verification';
+    await payment.save();
+
+    await payment.populate('property tenant owner');
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment receipt uploaded successfully. Awaiting owner verification.',
+      data: payment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Verify payment receipt
+// @route   PUT /api/rent/:id/verify-receipt
+// @access  Private (Owner only)
+export const verifyPaymentReceipt = async (req, res) => {
+  try {
+    const payment = await RentPayment.findById(req.params.id);
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment not found',
+      });
+    }
+
+    // Check authorization (owner only)
+    if (payment.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to verify this payment',
+      });
+    }
+
+    const { action, notes } = req.body; // action: 'approve' or 'reject'
+
+    if (action === 'approve') {
+      payment.verificationStatus = 'verified';
+      payment.status = 'paid';
+      payment.paymentDate = payment.paymentDate || new Date();
+    } else if (action === 'reject') {
+      payment.verificationStatus = 'rejected';
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid action. Use "approve" or "reject"',
+      });
+    }
+
+    payment.verificationNotes = notes || '';
+    payment.verifiedBy = req.user._id;
+    payment.verifiedAt = new Date();
+
+    await payment.save();
+    await payment.populate('property tenant owner verifiedBy');
+
+    res.status(200).json({
+      success: true,
+      message: `Payment receipt ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
+      data: payment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // @desc    Get payment statistics
 // @route   GET /api/rent/stats
 // @access  Private

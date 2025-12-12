@@ -16,6 +16,7 @@ import RentStatus from './pages/RentStatus';
 import Chat from './pages/Chat';
 import MyApplications from './pages/MyApplications';
 import ReceivedApplications from './pages/ReceivedApplications';
+import Analytics from './pages/Analytics';
 
 function App() {
   const { user, loading } = useAuth();
@@ -75,6 +76,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['owner']}>
               <ReceivedApplications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/owner/analytics"
+          element={
+            <ProtectedRoute allowedRoles={['owner']}>
+              <Analytics />
             </ProtectedRoute>
           }
         />
